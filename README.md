@@ -1,1 +1,257 @@
-# Ayush
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Annoyance-to-Love Converter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0b1121;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            color: #e2e8f0;
+            overflow: hidden;
+        }
+        /* Splash Screen Styles */
+        #splashScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #0b1121;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: opacity 1s ease-out;
+        }
+        #splashScreen.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .message-box {
+            background-color: #1a202c;
+            border: 2px solid #2d3748;
+            padding: 2.5rem;
+            border-radius: 1.5rem;
+            max-width: 90%;
+            text-align: center;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease-in-out, background-color 0.3s ease-in-out;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease-in, transform 0.5s ease-in;
+            position: relative;
+        }
+        .message-box.fade-in {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        #mainButton {
+            background-image: linear-gradient(135deg, #d946ef, #8b5cf6);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 9999px;
+            font-weight: bold;
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            cursor: pointer;
+            border: none;
+            margin-top: 2rem;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+        }
+        #mainButton:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3);
+        }
+        #mainButton:active {
+            transform: translateY(1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        #message {
+            font-size: 1.75rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            min-height: 2.5rem;
+            color: #d1d5db;
+        }
+        .question-buttons-container {
+            display: none;
+            flex-direction: row; /* Change to row for better spacing */
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 2rem;
+            position: relative;
+        }
+        .question-button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 9999px;
+            font-weight: bold;
+            transition: transform 0.1s ease-in-out;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 10;
+        }
+        .question-button:hover:not([disabled]) {
+            transform: scale(1.05);
+        }
+        .question-button:active:not([disabled]) {
+            transform: translateY(2px);
+        }
+        .question-button:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+        .yes-button {
+            background-color: #38a169;
+            color: white;
+        }
+        .no-button {
+            background-color: #e53e3e;
+            color: white;
+            transition: top 0.3s ease-in-out, left 0.3s ease-in-out; /* Add transition for movement */
+        }
+        .sad-emoji {
+            font-size: 2rem;
+            animation: bounce 0.5s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+    </style>
+</head>
+<body>
+    <div id="splashScreen">
+        <h1 class="text-4xl font-bold text-white mb-4">Loading...</h1>
+        <svg class="animate-spin h-8 w-8 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+    </div>
+
+    <div class="message-box" id="messageBox">
+        <p class="text-3xl font-bold mb-4">A Little Annoyance</p>
+        <p id="message" class="text-gray-400">Are you *sure* you want to click this button?</p>
+        <button id="mainButton">Click me!</button>
+        
+        <div id="questionButtonsContainer" class="question-buttons-container">
+            <!-- Container for Yes and Of course -->
+            <div class="flex flex-col gap-4">
+                <button id="yesButton" class="question-button yes-button">Yes</button>
+                <button id="ofCourseButton" class="question-button yes-button">Of course</button>
+            </div>
+            <!-- The No button is separate to allow for absolute positioning -->
+            <button id="noButton" class="question-button no-button absolute">No</button>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const messageBox = document.getElementById('messageBox');
+            const messageElement = document.getElementById('message');
+            const mainButton = document.getElementById('mainButton');
+            const questionButtonsContainer = document.getElementById('questionButtonsContainer');
+            const yesButton = document.getElementById('yesButton');
+            const ofCourseButton = document.getElementById('ofCourseButton');
+            const noButton = document.getElementById('noButton');
+            const splashScreen = document.getElementById('splashScreen');
+
+            let clickCount = 0;
+            const annoyingPhaseThreshold = 3;
+            let currentPhase = 'annoying';
+
+            // Tone.js Setup
+            const mainSynth = new Tone.PolySynth(Tone.Synth).toDestination();
+            const yesSynth = new Tone.Synth({ oscillator: { type: "sine" } }).toDestination();
+            const noSynth = new Tone.Synth({ oscillator: { type: "square" } }).toDestination();
+
+            const annoyingMessages = [
+                "I'm pretty sure you shouldn't click that again.",
+                "Seriously? We're doing this again?",
+                "Stop it. You know you want to stop.",
+                "The button is getting tired of this."
+            ];
+
+            // Annoy button click handler
+            mainButton.addEventListener('click', () => {
+                Tone.start();
+                mainSynth.triggerAttackRelease("C4", "8n");
+                if (currentPhase === 'annoying') {
+                    clickCount++;
+                    if (clickCount <= annoyingPhaseThreshold) {
+                        const randomIndex = Math.floor(Math.random() * annoyingMessages.length);
+                        messageElement.textContent = annoyingMessages[randomIndex];
+                    } else {
+                        currentPhase = 'loving';
+                        messageElement.textContent = "Okay, I'm sorry. Now for a special message...";
+                    }
+                } else if (currentPhase === 'loving') {
+                    currentPhase = 'questioning';
+                    messageElement.textContent = "I love you.";
+                    mainButton.style.display = 'none';
+                    questionButtonsContainer.style.display = 'flex';
+                    setTimeout(() => {
+                        messageElement.textContent = "Do you love me?";
+                        // Set initial position for noButton
+                        noButton.style.position = 'relative';
+                        noButton.style.top = '0px';
+                        noButton.style.left = '0px';
+                    }, 1500);
+                }
+            });
+
+            // Question button click handler
+            [yesButton, ofCourseButton, noButton].forEach(button => {
+                button.addEventListener('click', () => {
+                    if (button.id === 'noButton') {
+                        noSynth.triggerAttackRelease("G2", "8n");
+                        messageElement.innerHTML = `<span class="sad-emoji">😭</span><br>Do you love me?`;
+                        
+                        // Get the dimensions of the message box and the button
+                        const boxRect = messageBox.getBoundingClientRect();
+                        const buttonRect = noButton.getBoundingClientRect();
+
+                        // Calculate random position within the message box
+                        const newX = Math.random() * (boxRect.width - buttonRect.width - 40) + 20;
+                        const newY = Math.random() * (boxRect.height - buttonRect.height - 40) + 20;
+
+                        // Apply the new position
+                        noButton.style.position = 'absolute';
+                        noButton.style.top = `${newY}px`;
+                        noButton.style.left = `${newX}px`;
+
+                    } else {
+                        yesSynth.triggerAttackRelease("G4", "8n");
+                        messageElement.innerHTML = "I knew it! My heart is so happy! ❤️";
+                        yesButton.disabled = true;
+                        ofCourseButton.disabled = true;
+                        noButton.style.display = 'none';
+                    }
+                });
+            });
+
+            // Splash Screen Logic
+            window.onload = function() {
+                setTimeout(() => {
+                    splashScreen.classList.add('fade-out');
+                    messageBox.classList.add('fade-in');
+                }, 2000);
+            };
+        })();
+    </script>
+</body>
+</html>
+
